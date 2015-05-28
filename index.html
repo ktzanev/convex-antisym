@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Convex anti-symetrisation</title>
+  <script src="convexhull.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.12/angular.min.js"></script>
+  <script src="app.js"></script>
+  <style>
+    svg {
+      border: 1px solid lightGray;
+      box-shadow: 1px 1px 3px lightGray;
+    }
+    .angle {
+      display: inline-block;
+      width:4ex;
+    }
+    dt {
+      display: inline-block;
+      float:left;
+      text-align: right;
+      clear:both;
+    }
+    dd {
+      display: inline-block;
+      float:left;
+      margin: 0px 7px;
+    }
+    .lab {
+      width:17em;
+    }
+    .sublab{
+      width:4em;
+    }
+  </style>
+</head>
+<body ng-app>
+  <div ng-controller="MainCtrl">
+    <div>
+      <input type="range" ng-model="numPts" min="3" max="35"> {{numPts}}
+      <button ng-click="generateRandomPts();">Generate random points</button>
+      <button ng-click="setToRegularPolygon();">Regular polygon</button>
+    </div>
+    <div>
+      <button ng-click="strToPts(strPts);">Set points</button>
+      <input type="text" ng-model="strPts" style="width:70%">
+    </div>
+    <svg viewBox="-2.5 -2.5 5 5" width="400px" height="400px">
+      <g transform="matrix(1,0,0,-1,0,0)">
+        <path ng-attr-d="{{svgPath(minPath)}}" stroke="red" stroke-width=".07" fill="none" />
+        <path ng-attr-d="{{svgPath(maxPath)}}" stroke="blue" stroke-width=".07" fill="none" />
+        <path ng-attr-d="{{svgPath(borderPath)}}" stroke="yellow" stroke-width=".04" fill="none" />
+        <path ng-attr-d="{{svgPath(antisymPath)}} z" stroke="black" stroke-width=".03" fill="none" />
+        <path ng-repeat="p in minRePath" ng-attr-d="{{svgPath([p].concat(maxRePath[$index]))}}" stroke="black" stroke-width=".01" fill="none" />
+        <circle ng-attr-cx="{{barycentre.x}}" ng-attr-cy="{{barycentre.y}}" r="0.03" stroke="black" stroke-width=".01" fill="blue" />
+      </g>
+      <text x="0" y="-2.29" font-size=".21" fill="blue" text-anchor="middle" opacity="0.49">
+        The convex hull & its anti-symetrisation
+      </text>
+    </svg>
+    <svg viewBox="-2.5 -2.5 5 5" width="400px" height="400px">
+      <g transform="matrix(1,0,0,-1,0,0)">
+        <path ng-attr-d="{{svgPath(dualPath)}} z" stroke="yellow" stroke-width=".05" fill="none" />
+        <path ng-attr-d="{{svgPath(dualAntisymPath)}} z" stroke="black" stroke-width=".03" fill="none" />
+        <circle ng-attr-cx="{{dualAntisymBarycentre.x}}" ng-attr-cy="{{dualAntisymBarycentre.y}}" r="0.03" stroke="black" stroke-width=".01" fill="blue" />
+        <circle cx=0 cy=0 r="0.03" stroke="black" stroke-width=".01" fill="red" />
+      </g>
+      <text x="0" y="-2.29" font-size=".21" fill="blue" text-anchor="middle" opacity="0.49">
+        The dual
+      </text>
+    </svg>
+    <svg viewBox="-10 -10 20 20" width="400px" height="400px">
+      <g transform="matrix(1,0,0,-1,0,0)">
+        <circle cx=0 cy=0 ng-attr-r="{{maxVolDiff}}" stroke="#EEF" stroke-width=".1" fill="none" />
+        <circle cx=0 cy=0 ng-attr-r="{{minVolDiff | number:7}}" stroke="#EEF" stroke-width=".1" fill="none" />
+        <path ng-attr-d="{{svgPath(volDiffs)}} z" stroke="yellow" stroke-width=".21" fill="none" />
+        <line x1="0" y1="0" ng-attr-x2="{{maxVolPt.x}}" ng-attr-y2="{{maxVolPt.y}}" stroke="#EEF" stroke-width=".1"/>
+        <circle ng-attr-cx="{{volPt.x}}" ng-attr-cy="{{volPt.y}}" r="0.14" stroke="black" stroke-width=".01" fill="red" />
+      </g>
+      <text x="0" y="-9.16" font-size=".84" fill="blue" text-anchor="middle" opacity="0.49">
+        Volum difference (radial function in %)
+      </text>
+    </svg>
+    <div>
+      <input type="range" ng-model="angle" min="0" max="360"><span class="angle">{{angle}}°</span>
+      <button ng-click="setToAntisym()">Antisymetrize</button>
+      <button ng-click="randomAngle();setToAntisym();">Antisymetrize with random angle</button>
+    </div>
+    <dl>
+      <dt class="lab">Volume product (<b>VP</b>) :</dt>
+        <dd>{{barycentre.s | number:7 }} x {{dualBarycentre.s | number:7 }} = {{volProd | number:7 }}</dd>
+      <dt class="lab">Antisymetric Volume product (<b>AVP</b>) :</dt>
+        <dd>{{antisymBarycentre.s | number:7 }} x {{dualAntisymBarycentre.s | number:7 }} = {{dualVolProd | number:7 }}</dd>
+      <dt class="lab">(<b>VP</b> - <b>AVP</b>) / <b>VP</b> in % :</dt>
+        <dd>
+          <dl>
+            <dt class="sublab">min :</dt>
+              <dd> {{minVolDiff | number:7 }}</dd>
+            <dt class="sublab">current :</dt>
+              <dd> {{volDiff | number:7 }}</dd>
+            <dt class="sublab">max :</dt>
+              <dd> {{maxVolDiff | number:7 }}</dd>
+          </dl>
+        </dd>
+    </dl>
+
+  </div>
+</body>
+</html>
